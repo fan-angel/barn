@@ -1028,7 +1028,7 @@ angular.module('controllers', [])
             $scope.goConfirm=function(detail,flag,id){
                 /*console.log(id);*/
                 localStorage.alarmDetail=detail;
-                localStorage.alarmFlag=0;
+                localStorage.alarmFlag=flag;
                 localStorage.alarmId=id;
                 localStorage.receiveType=0;
                 $state.go("tabs.confirmwarn",{detail:detail,flag:flag,alarmId:id,type:0});

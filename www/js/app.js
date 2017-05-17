@@ -24,7 +24,7 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
             $cordovaAppVersion.getVersionNumber().then(function(version) {
                 localStorage.appVersion=version;
             });
-            document.addEventListener('deviceready', function () {
+            /*document.addEventListener('deviceready', function () {
                 $cordovaBadge.set(3).then(function() {
                     // 有权限, 已设置.
                 }, function(err) {
@@ -36,7 +36,7 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
                     // 无权限
                 });
 
-            }, false);
+            }, false);*/
             window.plugins.jPushPlugin.init();
             window.plugins.jPushPlugin.openNotificationInAndroidCallback=function(data){
                 /* alert(data.title);*/
