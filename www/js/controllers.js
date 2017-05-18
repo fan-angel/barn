@@ -12,8 +12,8 @@ angular.module('controllers', [])
 
 
         }])
-    .controller('TabsCtrl',['$scope','$rootScope','$http',
-        function($scope,$rootScope,$http){
+    .controller('TabsCtrl',['$scope','$rootScope','$http','$ionicTabsDelegate','$ionicSlideBoxDelegate',
+        function($scope,$rootScope,$http,$ionicTabsDelegate,$ionicSlideBoxDelegate){
 
             $rootScope.badges={
                 news:0
@@ -39,6 +39,30 @@ angular.module('controllers', [])
             },1000*60);
 
 
+          $scope.slideHasChanged=function(index){
+
+            $ionicTabsDelegate.select(index);
+          };
+          $scope.onHomeSelected=function(){
+
+            $ionicSlideBoxDelegate.slide(0);
+            $scope.activeSlide=0;
+          };
+          $scope.onTableSelected=function(){
+
+            $ionicSlideBoxDelegate.slide(1);
+            $scope.activeSlide=1;
+          };
+          $scope.onRiskSelected=function(){
+
+            $ionicSlideBoxDelegate.slide(2);
+            $scope.activeSlide=2;
+          };
+          $scope.onPersonalSelected=function(){
+
+            $ionicSlideBoxDelegate.slide(3);
+            $scope.activeSlide=3;
+          };
         }])
     .controller('LoginCtrl', ['$scope', '$state','$http','PopupService','LoadingService','$rootScope',
         function ($scope,$state,$http,PopupService,LoadingService,$rootScope) {
@@ -1249,3 +1273,31 @@ angular.module('controllers', [])
             context.fill();
         }
     }])
+      .controller('UpdateCtrl',['$scope','$http','PopupService',
+      function($scope,$http,PopupService){
+
+        $scope.display="none";
+        $scope.versionText="检测到最新版本为:";
+
+          $http.get('http://123.56.27.166:8080/barn_application/version/getLatestVersion')
+            .then(function(resp){
+              var nowVersion=resp.data[0].version_id;
+              if(nowVersion!=localStorage.appVersion){
+                $scope.versionText=$scope.versionText+nowVersion;
+                $scope.display="block";
+              }else{
+                $scope.versionText="当前版本已为最新";
+                $scope.display="none";
+              }
+
+            },function(error){
+              PopupService.setContent("网络连接错误");
+              PopupService.showAlert();
+
+            });
+
+        $scope.update=function () {
+          window.open('https://fir.im/barn1', '_system');
+        }
+
+      }])

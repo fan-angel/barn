@@ -21,6 +21,9 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
             if (window.StatusBar) {
                 StatusBar.styleDefault();
             }
+            if (window.cordova && window.cordova.InAppBrowser) {
+              window.open = window.cordova.InAppBrowser.open;
+            }
             $cordovaAppVersion.getVersionNumber().then(function(version) {
                 localStorage.appVersion=version;
             });
@@ -302,6 +305,15 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
                         controller: "PersonInfoCtrl"
                     }
                 }
+            })
+            .state('tabs.update', {
+              url: "/update",
+              views: {
+                'person-tab': {
+                  templateUrl: "templates/person-update.html",
+                  controller: "UpdateCtrl"
+                }
+              }
             })
         if(localStorage.getItem("start")==2){
             $urlRouterProvider.otherwise("/login");
