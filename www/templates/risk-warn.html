@@ -16,7 +16,7 @@
            </ul>
        </div>
         <div class="list warn-right-nav">
-            <span ng-repeat="item in items" class={{itemClass2[$index]}} ng-click="goConfirm(item.detail,item.flag,item.alarmId)">
+            <span ng-repeat="item in items" class={{itemClass2[$index]}} ng-click="goConfirm(item.detail,item.flag,item.alarmId,item.confirmId)">
                 <violation-list-item
                         top-text={{item.title}}
                         badge-show="true"

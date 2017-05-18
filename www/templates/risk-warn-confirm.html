@@ -11,9 +11,10 @@
             <img src="img/risk-icon-confirmwarn.png" width="120px" height="120px"
                  style="float:left;position: relative;left: 20px;top: 30px"/>
             <p style="float: left;margin-left:165px;padding-right:8px;width: 50%;margin-top: -80px">{{detail}}</p>
-            <div style="background-color: #cdcdcd;padding: 10px;height: 70px;clear: both">
+            <div style="background-color: #cdcdcd;padding: 10px;height: 85px;clear: both">
                 <button class={{buttonClass}} ng-click="confirm()" id="confirm">{{buttonText}}
                 </button>
+                <p style="float:right;margin-right:-80px;color: gray;margin-top: 50px;display:{{confirmDisplay}}">{{confirmPerson}}</p>
             </div>
         </div>
     </ion-content>

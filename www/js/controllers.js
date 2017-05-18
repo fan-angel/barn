@@ -27,7 +27,9 @@ angular.module('controllers', [])
                                 $rootScope.badges.news++;
                             }
                         }
-                    //    alert($scope.badges.news);
+                        if($rootScope.badges.news>99){
+                          $rootScope.badges.news="99+"
+                        }
                     },function(error){
 
                     });
@@ -1003,13 +1005,14 @@ angular.module('controllers', [])
                         LoadingService.hide();
                         $scope.loadFailedText="";
                         $scope.items=[];
-                        var title,detail,date,time,flag,duration,alarmId;
+                        var title,detail,date,time,flag,duration,alarmId,confirmId;
                         for(i=0;i<resp.data.length;i++){
 
                             title=resp.data[i].BNID+"号仓报警";
                             detail=resp.data[i].BNID+"号"+resp.data[i].alarm_name;
                             date=resp.data[i].time.split(" ")[0];
                             alarmId=resp.data[i].id;
+                            confirmId=resp.data[i].confirm_UID;
                             if(resp.data[i].time.split(" ")[1].split(":")[0]>12){
                                 duration="pm";
                             }else{
@@ -1021,7 +1024,7 @@ angular.module('controllers', [])
                             }else{
                                 flag=1;
                             }
-                            $scope.items.push({date:date, time:time,title:title,detail:detail,flag:flag,alarmId:alarmId});
+                            $scope.items.push({date:date, time:time,title:title,detail:detail,flag:flag,alarmId:alarmId,confirmId:confirmId});
 
                         }
                         $scope.items.sort(function(a,b){
@@ -1049,12 +1052,13 @@ angular.module('controllers', [])
 
             $scope.enter();
 
-            $scope.goConfirm=function(detail,flag,id){
+            $scope.goConfirm=function(detail,flag,id,confirmId){
                 /*console.log(id);*/
                 localStorage.alarmDetail=detail;
                 localStorage.alarmFlag=flag;
                 localStorage.alarmId=id;
                 localStorage.receiveType=0;
+                localStorage.confirmId=confirmId;
                 $state.go("tabs.confirmwarn",{detail:detail,flag:flag,alarmId:id,type:0});
             };
 
@@ -1079,6 +1083,8 @@ angular.module('controllers', [])
 
             $scope.buttonText = "领取预警";
             $scope.buttonClass = "green-bg";
+            $scope.confirmPerson = "确认人：";
+            $scope.confirmDisplay = "none";
           /*  var type=$stateParams.type;
             $scope.detail = $stateParams.detail;
             $scope.flag = $stateParams.flag;
@@ -1092,14 +1098,49 @@ angular.module('controllers', [])
             alert(keys);
             alert($ionicHistory.backView().stateName);*/
             var type=localStorage.receiveType;
+          //  var confirmId=localStorage.confirmId;
             $scope.detail = localStorage.alarmDetail;
-            $scope.flag = localStorage.alarmFlag;
+          //  $scope.flag = localStorage.alarmFlag;
             $scope.alarmId = localStorage.alarmId;
-            if($scope.flag==1){
+            $http.get('http://123.56.27.166:8080/barn_application/alarm/getAlarmInfoByAlarmId?alarmId='+$scope.alarmId)
+            .then(function(resp){
+              var flag;
+              if(resp.data[0].status=="true"){
+                flag=0;
+              }else{
+                flag=1;
+              }
+              if(flag==1){
                 $scope.buttonText = "已领取";
                 $scope.buttonClass = "lightgray-bg";
                 document.getElementById("confirm").disabled="disabled";
-            }
+              }
+              getConfirmPerson(resp.data[0].confirm_UID);
+            },function(error){
+              PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
+              PopupService.showAlert();
+
+            });
+            /*if($scope.flag==1){
+                $scope.buttonText = "已领取";
+                $scope.buttonClass = "lightgray-bg";
+                document.getElementById("confirm").disabled="disabled";
+
+            }*/
+            var getConfirmPerson=function(confirmId){
+              if(confirmId!=null){
+
+                $http.get('http://123.56.27.166:8080/barn_application/user/getUserByUID?UID='+confirmId)
+                  .then(function(resp){
+                    $scope.confirmPerson=$scope.confirmPerson+resp.data.name;
+                    $scope.confirmDisplay = "block";
+                  },function(error){
+                    PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
+                    PopupService.showAlert();
+
+                  });
+              }
+            };
             $scope.confirm=function(){
                 if(type==0){
                     $http.get('http://123.56.27.166:8080/barn_application/alarm/modifyStatusByAlarmId?' +
