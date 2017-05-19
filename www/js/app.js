@@ -42,7 +42,7 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
             }, false);*/
             window.plugins.jPushPlugin.init();
             window.plugins.jPushPlugin.openNotificationInAndroidCallback=function(data){
-                /* alert(data.title);*/
+                /* alert(data.title);
                 var keys="";
                 for(var key in data.extras){
                     keys=keys+"--"+key;
@@ -85,22 +85,17 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
                 localStorage.warnAddress=address;
                 localStorage.warnAlarmType=alarmType;
                 localStorage.warnTime=time;
-                /*if(data.extras.alarm_id!=null){
-                    alarmId=parseInt(data.extras.alarm_id);
-                }else{
-                    alarmId=1;
-                }
                 if(data.extras.alarm_id!=null){
                     alarmId=parseInt(data.extras.alarm_id);
-                }else{
-                    alarmId=1;
-                }*/
-               // alert(alarmId+typeof alarmId);
+                }else {
+                  alarmId = 1;
+                }
                 localStorage.alarmDetail=detail;
                 localStorage.alarmFlag=0;
                 localStorage.alarmId=alarmId;
                 localStorage.receiveType=1;
-                $state.go("tabs.confirmwarn",{detail:detail,flag:0,alarmId:alarmId,type:1});
+                $state.go("tabs.confirmwarn",{detail:detail,alarmId:alarmId,type:1});*/
+                $state.go("tabs.warn",{},{reload:true});
             };
             window.plugins.jPushPlugin.setDebugMode(true);
 
@@ -161,8 +156,8 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
 
                     if (cordova.plugins.Keyboard.isVisible) {
                         cordova.plugins.Keyboard.close();
-                    }else if($ionicHistory.currentView().stateName == "tabs.confirmwarn"){
-                        if ($ionicHistory.backView().stateName!="tabs.warn"){
+                    }else if($ionicHistory.currentView().stateName == "tabs.warn"){
+                        if ($ionicHistory.backView().stateName!="tabs.risk"){
                             $state.go("tabs.risk");
                         }else {
                             $ionicHistory.goBack();
@@ -263,7 +258,7 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
                 }
             })
             .state('tabs.confirmwarn', {
-                url: "/confirmwarn/:detail:flag:alarmId:type",
+                url: "/confirmwarn/:detail:alarmId:type",
                 views: {
                     'risk-tab': {
                         templateUrl: "templates/risk-warn-confirm.html",
@@ -315,6 +310,7 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
                 }
               }
             })
+
         if(localStorage.getItem("start")==2){
             $urlRouterProvider.otherwise("/login");
         }else{

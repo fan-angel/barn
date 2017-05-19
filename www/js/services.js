@@ -16,6 +16,20 @@ angular.module('services', [])
 
         }
     }])
+    .factory('UserService',[function(){
+      var userName,userSex,userAge,userAddress,userRole,userPhone;
+
+      return{
+        person:{
+          userName:userName,
+          userSex:userSex,
+          userAge:userAge,
+          userAddress:userAddress,
+          userRole:userRole,
+          userPhone:userPhone
+        }
+      }
+    }])
     .factory('LoadingService',['$ionicLoading',function($ionicLoading){
 
         var show = function() {

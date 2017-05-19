@@ -18,15 +18,16 @@ angular.module('controllers', [])
             $rootScope.badges={
                 news:0
             };
-            var getNews=function(){
-              //  alert(localStorage.userId);
+            $rootScope.getNews=function(){
                 $http.get('http://123.56.27.166:8080/barn_application/alarm/getAlarmByUID?UID='+localStorage.userId)
                     .then(function(resp){
+                        var news=0;
                         for(i=0;i<resp.data.length;i++){
                             if(resp.data[i].status=="true"){
-                                $rootScope.badges.news++;
+                                news++;
                             }
                         }
+                        $rootScope.badges.news=news;
                         if($rootScope.badges.news>99){
                           $rootScope.badges.news="99+"
                         }
@@ -34,40 +35,15 @@ angular.module('controllers', [])
 
                     });
             };
-            getNews();
+            $rootScope.getNews();
             setInterval(function(){
                 $rootScope.badges.news=0;
                 getNews();
             },1000*60);
 
-
-          $scope.slideHasChanged=function(index){
-
-            $ionicTabsDelegate.select(index);
-          };
-          $scope.onHomeSelected=function(){
-
-            $ionicSlideBoxDelegate.slide(0);
-            $scope.activeSlide=0;
-          };
-          $scope.onTableSelected=function(){
-
-            $ionicSlideBoxDelegate.slide(1);
-            $scope.activeSlide=1;
-          };
-          $scope.onRiskSelected=function(){
-
-            $ionicSlideBoxDelegate.slide(2);
-            $scope.activeSlide=2;
-          };
-          $scope.onPersonalSelected=function(){
-
-            $ionicSlideBoxDelegate.slide(3);
-            $scope.activeSlide=3;
-          };
         }])
-    .controller('LoginCtrl', ['$scope', '$state','$http','PopupService','LoadingService','$rootScope',
-        function ($scope,$state,$http,PopupService,LoadingService,$rootScope) {
+    .controller('LoginCtrl', ['$scope', '$state','$http','PopupService','LoadingService','UserService',
+        function ($scope,$state,$http,PopupService,LoadingService,UserService) {
             $scope.ctrlScope = $scope;
             if(localStorage.getItem("password")=="" || localStorage.password==null){
                 $scope.name = "";
@@ -96,7 +72,7 @@ angular.module('controllers', [])
                     .then(function(resp){
                         if(resp.data.state==1){
                             localStorage.userId=$scope.name;
-                          //  window.plugins.jPushPlugin.setAlias($scope.name);
+                            window.plugins.jPushPlugin.setAlias($scope.name);
                             if(document.getElementById("remember").checked==true){
                                 localStorage.password=$scope.password;
                             }else{
@@ -123,11 +99,11 @@ angular.module('controllers', [])
             var getInfo=function(){
                 $http.get('http://123.56.27.166:8080/barn_application/user/getUserByUID?UID='+$scope.name)
                     .then(function(resp){
-                        localStorage.userName=resp.data.name;
-                        localStorage.userAddress=resp.data.address;
-                        localStorage.userAge=resp.data.age;
-                        localStorage.userSex=resp.data.sex;
-                        localStorage.userPhone=resp.data.telephone;
+                        UserService.person.userName=resp.data.name;
+                        UserService.person.userAddress=resp.data.address;
+                        UserService.person.userAge=resp.data.age;
+                        UserService.person.userSex=resp.data.sex;
+                        UserService.person.userPhone=resp.data.telephone;
                         getRole();
 
                     },function(error){
@@ -141,7 +117,7 @@ angular.module('controllers', [])
                 $http.get('http://123.56.27.166:8080/barn_application/user/getAuthority?UID='+$scope.name)
                     .then(function(resp){
                         LoadingService.hide();
-                        localStorage.userRole=resp.data.role_name;
+                        UserService.person.userRole=resp.data.role_name;
                         $state.go("tabs.home");
                     },function(error){
 
@@ -766,8 +742,8 @@ angular.module('controllers', [])
         }
 
     ])
-    .controller('HomeCtrl',['$scope','$state','$http','LoadingService','PopupService',
-        function($scope,$state,$http,LoadingService,PopupService){
+    .controller('HomeCtrl',['$scope','$state','$http','LoadingService','PopupService','$rootScope',
+        function($scope,$state,$http,LoadingService,PopupService,$rootScope){
             $scope.loading = true;
             $scope.items = [];
             $scope.size=[];
@@ -780,6 +756,7 @@ angular.module('controllers', [])
             $scope.loadFailedText="";
 
             LoadingService.show();
+            $rootScope.getNews();
 
             $scope.enter=function(){
                 LoadingService.show();
@@ -858,13 +835,13 @@ angular.module('controllers', [])
             };
 
         }])
-    .controller('DetailCtrl',['$scope','$state','$stateParams','$window','$timeout','$http','PopupService','LoadingService',
-        function($scope,$state,$stateParams,$window,$timeout,$http,PopupService,LoadingService){
+    .controller('DetailCtrl',['$scope','$state','$stateParams','$window','$timeout','$http','PopupService','LoadingService','UserService',
+        function($scope,$state,$stateParams,$window,$timeout,$http,PopupService,LoadingService,UserService){
 
             var number = $stateParams.number;
             var userId=localStorage.getItem("userId");
             $scope.table={};
-            $scope.phonenum=localStorage.getItem("userPhone");
+            $scope.phonenum=UserService.person.userPhone;
             $scope.table.description=$stateParams.description;
             $scope.long = $stateParams.long;
             $scope.width = $stateParams.width;
@@ -873,8 +850,8 @@ angular.module('controllers', [])
             $scope.noMore = false;
             $scope.loadText = "继续拖动，查看小仓库";
             $scope.items = [];
-            $scope.userRole=localStorage.getItem("userRole");
-            $scope.userName=localStorage.getItem("userName");
+            $scope.userRole=UserService.person.userRole;
+            $scope.userName=UserService.person.userName;
             $scope.display="none";
             $scope.loadFailedText="";
             LoadingService.show();
@@ -987,10 +964,18 @@ angular.module('controllers', [])
                 $scope.arrow="img/icon-grey-arrow-right.png";
             };
         }])
-    .controller('WarnCtrl',['$scope','$state','$http','LoadingService','PopupService',
-        function($scope,$state,$http,LoadingService,PopupService){
+    .controller('WarnCtrl',['$scope','$state','$http','LoadingService','PopupService','$ionicHistory','$rootScope',
+        function($scope,$state,$http,LoadingService,PopupService,$ionicHistory,$rootScope){
 
+            if($ionicHistory.backView().stateName!="tabs.risk"){
+              $scope.hide=true;
+              $scope.display="block";
+            }else{
+              $scope.hide=false;
+              $scope.display="none";
+            }
             var userId=localStorage.getItem("userId");
+
             $scope.items=[];
             $scope.itemClass1=[];
             $scope.itemClass2=[];
@@ -1005,7 +990,8 @@ angular.module('controllers', [])
                         LoadingService.hide();
                         $scope.loadFailedText="";
                         $scope.items=[];
-                        var title,detail,date,time,flag,duration,alarmId,confirmId;
+                        var news=0;
+                        var title,detail,date,time,flag,duration,alarmId,confirmId,itemClass1,itemClass2;
                         for(i=0;i<resp.data.length;i++){
 
                             title=resp.data[i].BNID+"号仓报警";
@@ -1021,13 +1007,24 @@ angular.module('controllers', [])
                             time=resp.data[i].time.split(" ")[1].split(".")[0]+" "+duration;
                             if(resp.data[i].status=="true"){
                                 flag=0;
+                                itemClass1="";
+                                itemClass2="item warn-right-item";
+                                news++
                             }else{
                                 flag=1;
+                                itemClass1="lightgray-bg";
+                                itemClass2="item warn-right-item lightgray-bg";
                             }
-                            $scope.items.push({date:date, time:time,title:title,detail:detail,flag:flag,alarmId:alarmId,confirmId:confirmId});
+                            $scope.items.push({date:date, time:time,title:title,detail:detail,
+                                               flag:flag,alarmId:alarmId,confirmId:confirmId,
+                                               itemClass1:itemClass1,itemClass2:itemClass2});
 
                         }
-                        $scope.items.sort(function(a,b){
+                        $rootScope.badges.news=news;
+                        if($rootScope.badges.news>99){
+                          $rootScope.badges.news="99+"
+                        }
+                        /*$scope.items.sort(function(a,b){
                             return a.flag-b.flag});
                         for(i=0;i<$scope.items.length;i++){
                             if ($scope.items[i].flag == 0) {
@@ -1037,7 +1034,7 @@ angular.module('controllers', [])
                                 $scope.itemClass1.push("lightgray-bg");
                                 $scope.itemClass2.push("item warn-right-item lightgray-bg");
                             }
-                        }
+                        } */
 
                     },function(error){
                         LoadingService.hide();
@@ -1052,20 +1049,22 @@ angular.module('controllers', [])
 
             $scope.enter();
 
-            $scope.goConfirm=function(detail,flag,id,confirmId){
-                /*console.log(id);*/
+            $scope.goConfirm=function(detail,id){
                 localStorage.alarmDetail=detail;
-                localStorage.alarmFlag=flag;
+              //  localStorage.alarmFlag=flag;
                 localStorage.alarmId=id;
                 localStorage.receiveType=0;
-                localStorage.confirmId=confirmId;
-                $state.go("tabs.confirmwarn",{detail:detail,flag:flag,alarmId:id,type:0});
+             //   localStorage.confirmId=confirmId;
+                $state.go("tabs.confirmwarn",{detail:detail,alarmId:id,type:0});
             };
 
             $scope.doRefresh = function() {
                 $scope.enter();
                 $scope.$broadcast('scroll.refreshComplete');
             };
+            $scope.back=function(){
+              $state.go("tabs.risk");
+            }
 
         }])
     .controller('WarnConfirmCtrl',['$scope','$stateParams','$http','$ionicHistory','$state','PopupService','$rootScope',
@@ -1083,14 +1082,14 @@ angular.module('controllers', [])
 
             $scope.buttonText = "领取预警";
             $scope.buttonClass = "green-bg";
-            $scope.confirmPerson = "确认人：";
+            $scope.confirmPerson = "领取人：";
             $scope.confirmDisplay = "none";
           /*  var type=$stateParams.type;
             $scope.detail = $stateParams.detail;
             $scope.flag = $stateParams.flag;
-            $scope.alarmId = $stateParams.alarmId;*/
+            $scope.alarmId = $stateParams.alarmId;
 
-            /*alert($ionicHistory.currentView().stateName);
+            alert($ionicHistory.currentView().stateName);
             var keys="";
             for(key in $ionicHistory.backView()){
                 keys=keys+"--"+key;
@@ -1135,8 +1134,8 @@ angular.module('controllers', [])
                     $scope.confirmPerson=$scope.confirmPerson+resp.data.name;
                     $scope.confirmDisplay = "block";
                   },function(error){
-                    PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
-                    PopupService.showAlert();
+                    /*PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
+                    PopupService.showAlert();*/
 
                   });
               }
@@ -1200,7 +1199,6 @@ angular.module('controllers', [])
                         });
                 }
 
-
             };
             $scope.back=function(){
                 $state.go("tabs.risk");
@@ -1208,24 +1206,24 @@ angular.module('controllers', [])
             }
 
         }])
-    .controller('PersonCtrl',['$scope','$state','$ionicHistory',
-        function($scope,$state,$ionicHistory){
+    .controller('PersonCtrl',['$scope','$state','$ionicHistory','UserService',
+        function($scope,$state,$ionicHistory,UserService){
             $scope.version="当前"+localStorage.appVersion;
-            $scope.userName=localStorage.userName;
+            $scope.userName=UserService.person.userName;
             $scope.logout=function(){
                 $ionicHistory.clearCache();
                 $ionicHistory.clearHistory();
                 $state.go("login");
             };
         }])
-    .controller('PersonInfoCtrl',['$scope','$state','LoginService',
-        function($scope){
-            $scope.person={};
-            $scope.person.role=localStorage.userRole;
-            $scope.person.name=localStorage.userName;
-            $scope.person.sex=localStorage.userSex;
-            $scope.person.age=localStorage.userAge;
-            $scope.person.address=localStorage.userAddress;
+    .controller('PersonInfoCtrl',['$scope','UserService',
+        function($scope,UserService){
+            $scope.person=UserService.person;
+           /* $scope.person.role=UserService.userRole;
+            $scope.person.name=UserService.userName;
+            $scope.person.sex=UserService.userSex;
+            $scope.person.age=UserService.userAge;
+            $scope.person.address=UserService.userAddress;*/
         }])
 
     .controller('StatisticCtrl',['$scope','$state','$http',function ($scope,$state,$http) {
@@ -1314,31 +1312,31 @@ angular.module('controllers', [])
             context.fill();
         }
     }])
-      .controller('UpdateCtrl',['$scope','$http','PopupService',
-      function($scope,$http,PopupService){
+    .controller('UpdateCtrl',['$scope','$http','PopupService',
+    function($scope,$http,PopupService){
 
-        $scope.display="none";
-        $scope.versionText="检测到最新版本为:";
+      $scope.display="none";
+      $scope.versionText="检测到最新版本为: ";
 
-          $http.get('http://123.56.27.166:8080/barn_application/version/getLatestVersion')
-            .then(function(resp){
-              var nowVersion=resp.data[0].version_id;
-              if(nowVersion!=localStorage.appVersion){
-                $scope.versionText=$scope.versionText+nowVersion;
-                $scope.display="block";
-              }else{
-                $scope.versionText="当前版本已为最新";
-                $scope.display="none";
-              }
+        $http.get('http://123.56.27.166:8080/barn_application/version/getLatestVersion')
+          .then(function(resp){
+            var nowVersion=resp.data[0].version_id;
+            if(nowVersion!=localStorage.appVersion){
+              $scope.versionText=$scope.versionText+nowVersion;
+              $scope.display="block";
+            }else{
+              $scope.versionText="当前版本已为最新";
+              $scope.display="none";
+            }
 
-            },function(error){
-              PopupService.setContent("网络连接错误");
-              PopupService.showAlert();
+          },function(error){
+            PopupService.setContent("网络连接错误");
+            PopupService.showAlert();
 
-            });
+          });
 
-        $scope.update=function () {
-          window.open('https://fir.im/barn1', '_system');
-        }
+      $scope.update=function () {
+        window.open('https://fir.im/barn1', '_system');
+      }
 
-      }])
+    }])
