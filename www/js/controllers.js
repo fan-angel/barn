@@ -27,7 +27,7 @@ angular.module('controllers', [])
                                 myNews++;
                             }
                         }
-                        $rootScope.badges.news=news;
+                        $rootScope.badges.news=myNews;
                         if($rootScope.badges.news>99){
                           $rootScope.badges.news="99+"
                         }
