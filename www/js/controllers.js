@@ -21,10 +21,10 @@ angular.module('controllers', [])
             $rootScope.getNews=function(){
                 $http.get('http://123.56.27.166:8080/barn_application/alarm/getAlarmByUID?UID='+localStorage.userId)
                     .then(function(resp){
-                        var news=0;
+                        var myNews=0;
                         for(i=0;i<resp.data.length;i++){
                             if(resp.data[i].status=="true"){
-                                news++;
+                                myNews++;
                             }
                         }
                         $rootScope.badges.news=news;
@@ -37,8 +37,7 @@ angular.module('controllers', [])
             };
             $rootScope.getNews();
             setInterval(function(){
-                $rootScope.badges.news=0;
-                getNews();
+              $rootScope.getNews();
             },1000*60);
 
         }])
@@ -867,6 +866,10 @@ angular.module('controllers', [])
                         $scope.display="block";
                         $scope.loadFailedText="";
                         var leftBigText,rightGrayText,barnId;
+                        if(resp.data.length<=1){
+                          $scope.noMore = true;
+                          $scope.loadText = "已没有更多数据";
+                        }
                         for(i=0;i<resp.data.length;i++){
 
                             if(i==0)leftBigText="小仓一";
