@@ -71,7 +71,7 @@ angular.module('controllers', [])
                     .then(function(resp){
                         if(resp.data.state==1){
                             localStorage.userId=$scope.name;
-                            window.plugins.jPushPlugin.setAlias($scope.name);
+                           // window.plugins.jPushPlugin.setAlias($scope.name);
                             if(document.getElementById("remember").checked==true){
                                 localStorage.password=$scope.password;
                             }else{
@@ -1070,8 +1070,8 @@ angular.module('controllers', [])
             }
 
         }])
-    .controller('WarnConfirmCtrl',['$scope','$stateParams','$http','$ionicHistory','$state','PopupService','$rootScope',
-        function($scope,$stateParams,$http,$ionicHistory,$state,PopupService,$rootScope){
+    .controller('WarnConfirmCtrl',['$scope','$stateParams','$http','$ionicHistory','$state','PopupService','$rootScope','LoadingService',
+        function($scope,$stateParams,$http,$ionicHistory,$state,PopupService,$rootScope,LoadingService){
 
             if($ionicHistory.backView().stateName!="tabs.warn"){
                 $scope.hide=true;
@@ -1082,6 +1082,7 @@ angular.module('controllers', [])
                 $scope.hide=false;
                 $scope.display="none";
             }
+
 
             $scope.buttonText = "领取预警";
             $scope.buttonClass = "green-bg";
@@ -1116,8 +1117,9 @@ angular.module('controllers', [])
                 $scope.buttonText = "已领取";
                 $scope.buttonClass = "lightgray-bg";
                 document.getElementById("confirm").disabled="disabled";
+                getConfirmPerson(resp.data[0].confirm_UID);
               }
-              getConfirmPerson(resp.data[0].confirm_UID);
+
             },function(error){
               PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
               PopupService.showAlert();
@@ -1144,14 +1146,16 @@ angular.module('controllers', [])
               }
             };
             $scope.confirm=function(){
+                LoadingService.show();
                 if(type==0){
                     $http.get('http://123.56.27.166:8080/barn_application/alarm/modifyStatusByAlarmId?' +
                         'alarm_id='+$scope.alarmId+'&confirm_UID='+localStorage.userId)
                         .then(function(resp){
+                            LoadingService.hide();
                             //   alert(resp);
                             if(resp.data.state==1){
                                 // alert("确认成功");
-                                PopupService.setContent("确认成功");
+                                PopupService.setContent("领取成功");
                                 PopupService.showAlert();
                                 $scope.buttonText = "已领取";
                                 $scope.buttonClass = "lightgray-bg";
@@ -1162,6 +1166,7 @@ angular.module('controllers', [])
                                 PopupService.showAlert();
                             }
                         },function(error){
+                            LoadingService.hide();
                             PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
                             PopupService.showAlert();
                         });
@@ -1181,7 +1186,7 @@ angular.module('controllers', [])
                     $http.get('http://123.56.27.166:8080/barn_application/alarm/modifyStatusByParas?' +
                         'device_id='+deviceId+'&address='+address+'&time='+newtime+'&alarm_type_id='+alarmType+'&confirm_UID='+localStorage.userId)
                         .then(function(resp){
-
+                          LoadingService.hide();
                             if(resp.data.state==1){
                                 // alert("确认成功");
                                 PopupService.setContent("确认成功");
@@ -1229,10 +1234,10 @@ angular.module('controllers', [])
             $scope.person.address=UserService.userAddress;*/
         }])
 
-    .controller('StatisticCtrl',['$scope','$state','$http',function ($scope,$state,$http) {
+    .controller('StatisticCtrl',['$scope','$state','$http','$rootScope',function ($scope,$state,$http,$rootScope) {
 
         //获取数据
-        $scope.doMessage = function () {
+        /*$scope.doMessage = function () {
 
 
             var url = "http://123.56.27.166:8080/barn_application/alarm/getAlarmInfoByBNID?BNID=1";
@@ -1252,68 +1257,92 @@ angular.module('controllers', [])
                 console.log('success!!!!!!', response);
             })
             $scope.myvalue = 0.8;
-        }
+        }*/
+
+      $http.get('http://123.56.27.166:8080/barn_application/alarm/getAlarmByUID?UID='+localStorage.userId)
+        .then(function(resp){
+          var already=0,notyet=0;
+          for(i=0;i<resp.data.length;i++) {
+            if (resp.data[i].status == "true") {
+              notyet++;
+            } else {
+              already++;
+            }
+          }
+
+          $scope.myvalue=already/(already+notyet);
+          already=Math.round(already/(already+notyet)*100);
+          notyet=100-already;
+          $scope.message = {already:already+'%',notyet:notyet+'%'};
+          doCanvas();
+
+        },function(error){
+
+        });
+      var doCanvas=function () {
         //获取Canvas对象(画布)
         var canvas = document.getElementById("myCanvas");
         //简单地检测当前浏览器是否支持Canvas对象，以免在一些不支持html5的浏览器中提示语法错误
         if (canvas.getContext) {
-            //获取对应的CanvasRenderingContext2D对象(画笔)
-            var context = canvas.getContext("2d");
-            var value = canvas.getAttribute("value");
-            var centerSize = [60, 60, 50];
-            //灰色的
-            context.beginPath();
-            context.moveTo(centerSize[0], centerSize[1]);
-            context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI * 2, false);
-            context.closePath();
-            context.fillStyle = '#E93458';
-            context.fill();
-            //画红色的圆
-            context.beginPath();
-            context.moveTo(centerSize[0], centerSize[1]);
-            context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI * 2 * value, false);
-            context.closePath();
-            context.fillStyle = '#F099B8';
-            context.fill();
-            //画里面的白色的圆
-            context.beginPath();
-            context.moveTo(centerSize[0], centerSize[1]);
-            context.arc(centerSize[0], centerSize[1], centerSize[2] - 15, 0, Math.PI * 2, true);
-            context.closePath();
-            context.fillStyle = 'rgba(255,255,255,1)';
-            context.fill();
+          //获取对应的CanvasRenderingContext2D对象(画笔)
+          var context = canvas.getContext("2d");
+          var centerSize = [60, 60, 50];
+          //画红色的圆
+          context.beginPath();
+          context.moveTo(centerSize[0], centerSize[1]);
+          context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI * 2 , false);
+          context.closePath();
+          context.fillStyle = '#E93458';
+          context.fill();
+          //灰色的
+          context.beginPath();
+          context.moveTo(centerSize[0], centerSize[1]);
+          context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI* 2* $scope.myvalue, false);
+          context.closePath();
+          context.fillStyle = '#F099B8';
+          context.fill();
+
+          //画里面的白色的圆
+          context.beginPath();
+          context.moveTo(centerSize[0], centerSize[1]);
+          context.arc(centerSize[0], centerSize[1], centerSize[2] - 15, 0, Math.PI * 2, true);
+          context.closePath();
+          context.fillStyle = 'rgba(255,255,255,1)';
+          context.fill();
         }
 
         //获取Canvas对象(画布)
         var canvas2 = document.getElementById("myCanvas2");
         //简单地检测当前浏览器是否支持Canvas对象，以免在一些不支持html5的浏览器中提示语法错误
         if (canvas2.getContext) {
-            //获取对应的CanvasRenderingContext2D对象(画笔)
-            var context = canvas2.getContext("2d");
-            var value = canvas2.getAttribute("value");
-            var centerSize = [60, 60, 50];
-            //灰色的
-            context.beginPath();
-            context.moveTo(centerSize[0], centerSize[1]);
-            context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI * 2, false);
-            context.closePath();
-            context.fillStyle = '#4DAED5';
-            context.fill();
-            //画红色的圆
-            context.beginPath();
-            context.moveTo(centerSize[0], centerSize[1]);
-            context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI * 2 * value, false);
-            context.closePath();
-            context.fillStyle = '#99E2FC';
-            context.fill();
-            //画里面的白色的圆
-            context.beginPath();
-            context.moveTo(centerSize[0], centerSize[1]);
-            context.arc(centerSize[0], centerSize[1], centerSize[2] - 15, 0, Math.PI * 2, true);
-            context.closePath();
-            context.fillStyle = 'rgba(255,255,255,1)';
-            context.fill();
+          //获取对应的CanvasRenderingContext2D对象(画笔)
+          var context = canvas2.getContext("2d");
+          var value = canvas2.getAttribute("value");
+          var centerSize = [60, 60, 50];
+          //灰色的
+          context.beginPath();
+          context.moveTo(centerSize[0], centerSize[1]);
+          context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI * 2, false);
+          context.closePath();
+          context.fillStyle = '#4DAED5';
+          context.fill();
+          //画红色的圆
+          context.beginPath();
+          context.moveTo(centerSize[0], centerSize[1]);
+          context.arc(centerSize[0], centerSize[1], centerSize[2], 0, Math.PI * 2 * value, false);
+          context.closePath();
+          context.fillStyle = '#99E2FC';
+          context.fill();
+          //画里面的白色的圆
+          context.beginPath();
+          context.moveTo(centerSize[0], centerSize[1]);
+          context.arc(centerSize[0], centerSize[1], centerSize[2] - 15, 0, Math.PI * 2, true);
+          context.closePath();
+          context.fillStyle = 'rgba(255,255,255,1)';
+          context.fill();
         }
+      }
+
     }])
     .controller('UpdateCtrl',['$scope','$http','PopupService',
     function($scope,$http,PopupService){
