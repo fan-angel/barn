@@ -72,8 +72,28 @@ angular.module('services', [])
             myContent=content;
             myBody="<p style='color: #108678;width: 80%;margin: auto;text-align: center'>"+myContent+"</p>";
         };
+      // 自定义弹窗
+      var showPopup=function (myTap) {
+        var myPopup = $ionicPopup.show({
+          title: myTitle,
+          template: myBody,
+
+          buttons: [
+            {
+              text: '<b>确认</b>',
+              type: 'button-royal',
+              onTap: function(e) {
+                myTap();
+              }
+            }
+          ]
+        });
+      };
+
+
         return{
             showAlert:showAlert,
+            showPopup:showPopup,
             setTitle:setTitle,
             setContent:setContent
         };

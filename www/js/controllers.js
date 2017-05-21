@@ -978,6 +978,11 @@ angular.module('controllers', [])
               $scope.display="none";
             }
             var userId=localStorage.getItem("userId");
+           /* PopupService.setContent("领取失败");
+            var myTap=function () {
+              alert("点击事件发生了");
+            };
+            PopupService.showPopup(myTap); */
 
             $scope.items=[];
             $scope.itemClass1=[];
@@ -991,36 +996,40 @@ angular.module('controllers', [])
                         //  document.getElementById("warnLoading").style.display="none";
                         //  document.getElementById("warn").style.display="block";
                         LoadingService.hide();
-                        $scope.loadFailedText="";
                         $scope.items=[];
+                      if(resp.data[0].state==1){
+                        // 因为后台可能会返回空数据，所以要做一个判断，防止程序崩溃
+                        $scope.loadFailedText="当前数据库中没有任何告警信息"
+                      }else{
+                        $scope.loadFailedText="";
                         var news=0;
                         var title,detail,date,time,flag,duration,alarmId,confirmId,itemClass1,itemClass2;
                         for(i=0;i<resp.data.length;i++){
 
-                            title=resp.data[i].BNID+"号仓报警";
-                            detail=resp.data[i].BNID+"号"+resp.data[i].alarm_name;
-                            date=resp.data[i].time.split(" ")[0];
-                            alarmId=resp.data[i].id;
-                            confirmId=resp.data[i].confirm_UID;
-                            if(resp.data[i].time.split(" ")[1].split(":")[0]>12){
-                                duration="pm";
-                            }else{
-                                duration="am";
-                            }
-                            time=resp.data[i].time.split(" ")[1].split(".")[0]+" "+duration;
-                            if(resp.data[i].status=="true"){
-                                flag=0;
-                                itemClass1="";
-                                itemClass2="item warn-right-item";
-                                news++
-                            }else{
-                                flag=1;
-                                itemClass1="lightgray-bg";
-                                itemClass2="item warn-right-item lightgray-bg";
-                            }
-                            $scope.items.push({date:date, time:time,title:title,detail:detail,
-                                               flag:flag,alarmId:alarmId,confirmId:confirmId,
-                                               itemClass1:itemClass1,itemClass2:itemClass2});
+                          title=resp.data[i].BNID+"号仓报警";
+                          detail=resp.data[i].BNID+"号"+resp.data[i].alarm_name;
+                          date=resp.data[i].time.split(" ")[0];
+                          alarmId=resp.data[i].id;
+                          confirmId=resp.data[i].confirm_UID;
+                          if(resp.data[i].time.split(" ")[1].split(":")[0]>12){
+                            duration="pm";
+                          }else{
+                            duration="am";
+                          }
+                          time=resp.data[i].time.split(" ")[1].split(".")[0]+" "+duration;
+                          if(resp.data[i].status=="true"){
+                            flag=0;
+                            itemClass1="";
+                            itemClass2="item warn-right-item";
+                            news++
+                          }else{
+                            flag=1;
+                            itemClass1="lightgray-bg";
+                            itemClass2="item warn-right-item lightgray-bg";
+                          }
+                          $scope.items.push({date:date, time:time,title:title,detail:detail,
+                            flag:flag,alarmId:alarmId,confirmId:confirmId,
+                            itemClass1:itemClass1,itemClass2:itemClass2});
 
                         }
                         $rootScope.badges.news=news;
@@ -1028,16 +1037,18 @@ angular.module('controllers', [])
                           $rootScope.badges.news="99+"
                         }
                         /*$scope.items.sort(function(a,b){
-                            return a.flag-b.flag});
-                        for(i=0;i<$scope.items.length;i++){
-                            if ($scope.items[i].flag == 0) {
-                                $scope.itemClass1.push("");
-                                $scope.itemClass2.push("item warn-right-item");
-                            } else {
-                                $scope.itemClass1.push("lightgray-bg");
-                                $scope.itemClass2.push("item warn-right-item lightgray-bg");
-                            }
-                        } */
+                         return a.flag-b.flag});
+                         for(i=0;i<$scope.items.length;i++){
+                         if ($scope.items[i].flag == 0) {
+                         $scope.itemClass1.push("");
+                         $scope.itemClass2.push("item warn-right-item");
+                         } else {
+                         $scope.itemClass1.push("lightgray-bg");
+                         $scope.itemClass2.push("item warn-right-item lightgray-bg");
+                         }
+                         } */
+                      }
+
 
                     },function(error){
                         LoadingService.hide();
@@ -1070,8 +1081,8 @@ angular.module('controllers', [])
             }
 
         }])
-    .controller('WarnConfirmCtrl',['$scope','$stateParams','$http','$ionicHistory','$state','PopupService','$rootScope','LoadingService',
-        function($scope,$stateParams,$http,$ionicHistory,$state,PopupService,$rootScope,LoadingService){
+    .controller('WarnConfirmCtrl',['$scope','$stateParams','$http','$ionicHistory','$state','PopupService','$rootScope','LoadingService','UserService',
+        function($scope,$stateParams,$http,$ionicHistory,$state,PopupService,$rootScope,LoadingService,UserService){
 
             if($ionicHistory.backView().stateName!="tabs.warn"){
                 $scope.hide=true;
@@ -1105,26 +1116,29 @@ angular.module('controllers', [])
             $scope.detail = localStorage.alarmDetail;
           //  $scope.flag = localStorage.alarmFlag;
             $scope.alarmId = localStorage.alarmId;
-            $http.get('http://123.56.27.166:8080/barn_application/alarm/getAlarmInfoByAlarmId?alarmId='+$scope.alarmId)
-            .then(function(resp){
-              var flag;
-              if(resp.data[0].status=="true"){
-                flag=0;
-              }else{
-                flag=1;
-              }
-              if(flag==1){
-                $scope.buttonText = "已领取";
-                $scope.buttonClass = "lightgray-bg";
-                document.getElementById("confirm").disabled="disabled";
-                getConfirmPerson(resp.data[0].confirm_UID);
-              }
+            alert($scope.alarmId);
+            var enter=function () {
+             $http.get('http://123.56.27.166:8080/barn_application/alarm/getAlarmInfoByAlarmId?alarmId='+$scope.alarmId)
+               .then(function(resp){
+                 var flag;
+                 if(resp.data[0].status=="true"){
+                   flag=0;
+                 }else{
+                   flag=1;
+                 }
+                 if(flag==1){
+                   $scope.buttonText = "已领取";
+                   $scope.buttonClass = "lightgray-bg";
+                   document.getElementById("confirm").disabled="disabled";
+                   getConfirmPerson(resp.data[0].confirm_UID);
+                 }
 
-            },function(error){
-              PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
-              PopupService.showAlert();
+               },function(error){
+                 PopupService.setContent("服务器连接失败，请检查您的网络，然后重试");
+                 PopupService.showAlert();
 
-            });
+               });
+           }
             /*if($scope.flag==1){
                 $scope.buttonText = "已领取";
                 $scope.buttonClass = "lightgray-bg";
@@ -1145,6 +1159,7 @@ angular.module('controllers', [])
                   });
               }
             };
+            enter();
             $scope.confirm=function(){
                 LoadingService.show();
                 if(type==0){
@@ -1159,11 +1174,13 @@ angular.module('controllers', [])
                                 PopupService.showAlert();
                                 $scope.buttonText = "已领取";
                                 $scope.buttonClass = "lightgray-bg";
+                                $scope.confirmPerson=$scope.confirmPerson+UserService.person.userName;
+                                $scope.confirmDisplay = "block";
                                 $rootScope.badges.news=$rootScope.badges.news-1;
                             }else{
                                 // alert("领取失败");
-                                PopupService.setContent("领取失败");
-                                PopupService.showAlert();
+                              PopupService.setContent("领取失败");
+                              PopupService.showAlert();
                             }
                         },function(error){
                             LoadingService.hide();
