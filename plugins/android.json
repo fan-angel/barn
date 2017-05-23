@@ -37,6 +37,9 @@
         },
         "cordova-plugin-inappbrowser": {
             "PACKAGE_NAME": "com.yzm.barn"
+        },
+        "cordova-plugin-network-information": {
+            "PACKAGE_NAME": "com.yzm.barn"
         }
     },
     "dependent_plugins": {

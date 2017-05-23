@@ -5,7 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('starter', ['ionic','controllers','directives','services','ngCordova'])
 
-    .run(function($ionicPlatform,$location,$ionicHistory,$ionicPopup,$rootScope,$timeout,$state,$cordovaAppVersion,$cordovaBadge) {
+    .run(function($ionicPlatform,$location,$ionicHistory,$ionicPopup,$rootScope,$timeout,$state,$cordovaAppVersion,$cordovaBadge,LoginService) {
         $ionicPlatform.ready(function () {
 
             if (window.cordova && window.cordova.plugins.Keyboard) {
@@ -95,7 +95,10 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
                 localStorage.alarmId=alarmId;
                 localStorage.receiveType=1;
                 $state.go("tabs.confirmwarn",{detail:detail,alarmId:alarmId,type:1});*/
+
                 $state.go("tabs.warn",{},{reload:true});
+
+
             };
             window.plugins.jPushPlugin.setDebugMode(true);
 
@@ -311,10 +314,10 @@ angular.module('starter', ['ionic','controllers','directives','services','ngCord
               }
             })
 
-        if(localStorage.getItem("start")==2){
+        if(localStorage.getItem("start")==1){
             $urlRouterProvider.otherwise("/login");
         }else{
-            localStorage.setItem("start",2);
+            localStorage.setItem("start",1);
             $urlRouterProvider.otherwise("/start");
         }
 
